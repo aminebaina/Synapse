@@ -1,0 +1,6 @@
+{
+  "name": "Visualiseur de Recherche Linéaire",
+  "description": "Application pédagogique moderne pour visualiser pas à pas l'algorithme de recherche linéaire avec pseudo-code synchronisé.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
