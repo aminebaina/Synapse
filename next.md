@@ -55,6 +55,12 @@ Toutes les briques fondamentales débutantes sont en place, sans aucun bug de co
   - Partage en 1 clic sur **LinkedIn** et **X (Twitter)** avec texte d'accomplissement pré-rempli.
   - Sceau officiel doré, ID de vérification cryptographique et date de délivrance.
 
+### 5. Hub des 3 Parcours d'Apprentissage (Page d'Accueil)
+- ✅ **Parcours 1 : Informatique, Algorithmique & Mathématiques Discrètes** (Disponible · Niveau 1 Opérationnel avec 13 modules).
+- 🟡 **Parcours 2 : Python Developer** (En cours de conception · POO, mécanique CPython, générateurs, pytest, FastAPI).
+- 🟡 **Parcours 3 : Data Analyst** (En cours de conception · NumPy vectoriel, Pandas DataFrames, nettoyage, dataviz & SQL analytique).
+- ✅ Navigation bidirectionnelle fluide entre le catalogue des 3 parcours et l'environnement d'apprentissage interactif.
+
 ---
 
 ## 🚀 ÉTAPES SUIVANTES : LES PALIERS INTERMÉDIAIRES SANS RACCOURCI

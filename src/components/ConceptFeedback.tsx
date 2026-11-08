@@ -328,19 +328,19 @@ export default function ConceptFeedback({ conceptId, conceptTitle }: ConceptFeed
                       type="text"
                       value={authorName}
                       onChange={(e) => setAuthorName(e.target.value)}
-                      placeholder="Ex: Thomas, Sarah..."
+                      placeholder="Votre prénom ou identifiant"
                       className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-sky-500"
                     />
                   </div>
                   <div>
                     <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-slate-500" /> Email (optionnel, pour être tenu informé)
+                      <Mail className="w-3 h-3 text-slate-500" /> Email (optionnel)
                     </label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="votre.email@exemple.com"
+                      placeholder="Votre adresse email"
                       className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-sky-500"
                     />
                   </div>

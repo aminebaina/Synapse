@@ -41,6 +41,7 @@ interface SidebarProps {
   onOpenCertificate: () => void;
   onExportJSON: () => void;
   onImportJSON: (json: string) => boolean;
+  onReturnToTracks?: () => void;
 }
 
 export default function Sidebar({
@@ -54,7 +55,8 @@ export default function Sidebar({
   isLevel1Complete,
   onOpenCertificate,
   onExportJSON,
-  onImportJSON
+  onImportJSON,
+  onReturnToTracks
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDataModal, setShowDataModal] = useState(false);
@@ -190,6 +192,25 @@ export default function Sidebar({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Active Track Switcher Strip */}
+        {onReturnToTracks && (
+          <div className="px-3.5 py-2 bg-slate-950/70 border-b border-slate-800/80 flex items-center justify-between text-xs shrink-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+              <span className="font-semibold text-slate-300 truncate text-[11px]">
+                Track 1 : Info & Maths
+              </span>
+            </div>
+            <button
+              onClick={onReturnToTracks}
+              className="text-[11px] font-bold text-sky-400 hover:text-sky-300 transition cursor-pointer shrink-0 ml-1"
+              title="Voir les 3 parcours disponibles"
+            >
+              Tous les tracks
+            </button>
+          </div>
+        )}
 
         {/* Search bar inside sidebar */}
         <div className="p-3 border-b border-slate-800/80 shrink-0">

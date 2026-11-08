@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Users, Plus, Minus, Eye, RotateCcw, Sparkles, Info, ArrowRight } from 'lucide-react';
 
 export default function QueueView() {
-  const [queue, setQueue] = useState<string[]>(['Alice', 'Bob', 'Charlie']);
-  const [inputName, setInputName] = useState<string>('David');
-  const [message, setMessage] = useState<string>('File prête. Le premier arrivé sera le premier servi (FIFO).');
+  const [queue, setQueue] = useState<string[]>(['Tâche #1', 'Tâche #2', 'Tâche #3']);
+  const [inputName, setInputName] = useState<string>('Tâche #4');
+  const [message, setMessage] = useState<string>('File prête. Le premier élément arrivé sera le premier traité (FIFO).');
 
   const maxCapacity = 5;
 
@@ -13,26 +13,26 @@ export default function QueueView() {
     if (!inputName.trim()) return;
 
     if (queue.length >= maxCapacity) {
-      setMessage("File pleine ! Capacité maximale de 5 personnes atteinte.");
+      setMessage("File pleine ! Capacité maximale de 5 éléments atteinte.");
       return;
     }
 
     setQueue((prev) => [...prev, inputName.trim()]);
-    setMessage(`Enfilé (Enqueue) : ${inputName.trim()} a rejoint l'arrière de la file.`);
+    setMessage(`Enfilé (Enqueue) : "${inputName.trim()}" a rejoint l'arrière de la file.`);
 
-    const randomNames = ['Emma', 'Lucas', 'Sarah', 'Thomas', 'Léa', 'Hugo'];
-    setInputName(randomNames[Math.floor(Math.random() * randomNames.length)]);
+    const nextTasks = ['Tâche #5', 'Tâche #6', 'Tâche #7', 'Tâche #8', 'Tâche #9', 'Tâche #10'];
+    setInputName(nextTasks[Math.floor(Math.random() * nextTasks.length)]);
   };
 
   const handleDequeue = () => {
     if (queue.length === 0) {
-      setMessage("File vide : personne à servir.");
+      setMessage("File vide : aucun élément à traiter.");
       return;
     }
 
     const served = queue[0];
     setQueue((prev) => prev.slice(1));
-    setMessage(`Défilé (Dequeue) : ${served} (en tête de file) a été servi(e) et quitte la file.`);
+    setMessage(`Défilé (Dequeue) : "${served}" (en tête de file) a été traité(e) et quitte la file.`);
   };
 
   const handleClear = () => {
@@ -134,8 +134,8 @@ export default function QueueView() {
               type="text"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
-              placeholder="Prénom"
-              className="w-32 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-sky-500"
+              placeholder="Identifiant tâche"
+              className="w-36 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-sky-500"
             />
             <button
               type="submit"
