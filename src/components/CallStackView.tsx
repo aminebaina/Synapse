@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Workflow, ChevronRight, RotateCcw, Sparkles, Info, Code2, Layers3 } from 'lucide-react';
+import { CodeLanguage } from '../languageStore';
 
 interface StackFrame {
   name: string;
@@ -15,10 +16,18 @@ interface Step {
   returnedValue?: number | null;
 }
 
-export default function CallStackView() {
+interface CallStackViewProps {
+  language?: CodeLanguage;
+  onLanguageChange?: (lang: CodeLanguage) => void;
+}
+
+export default function CallStackView({
+  language = 'python',
+  onLanguageChange
+}: CallStackViewProps = {}) {
   const [stepIndex, setStepIndex] = useState<number>(0);
 
-  const CODE_LINES = [
+  const PSEUDO_CODE_LINES = [
     { id: 1, text: 'function calculerTVA(montant) {' },
     { id: 2, text: '  let taux = 0.20;' },
     { id: 3, text: '  return montant * taux;' },
@@ -30,6 +39,21 @@ export default function CallStackView() {
     { id: 9, text: '// Début du programme' },
     { id: 10, text: 'let total = calculerTotal(100);' },
   ];
+
+  const PYTHON_CODE_LINES = [
+    { id: 1, text: 'def calculer_tva(montant):' },
+    { id: 2, text: '    taux = 0.20' },
+    { id: 3, text: '    return montant * taux' },
+    { id: 4, text: '    # fin de fonction' },
+    { id: 5, text: 'def calculer_total(ht):' },
+    { id: 6, text: '    tva = calculer_tva(ht)' },
+    { id: 7, text: '    return ht + tva' },
+    { id: 8, text: '    # fin de fonction' },
+    { id: 9, text: '# Début du script principal' },
+    { id: 10, text: 'total = calculer_total(100)' },
+  ];
+
+  const activeCodeLines = language === 'python' ? PYTHON_CODE_LINES : PSEUDO_CODE_LINES;
 
   const steps: Step[] = [
     {
@@ -135,18 +159,49 @@ export default function CallStackView() {
         {/* Zone 1: Code Program (Left 6 cols) */}
         <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-800">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <Code2 className="w-4 h-4 text-sky-400" />
-                <span>Code Source Exécuté</span>
+                <span>Zone 1 · {language === 'python' ? 'Code Python' : 'Pseudo-code'}</span>
               </h2>
-              <span className="text-xs font-mono text-sky-400">
-                Ligne {current.lineId}
-              </span>
+
+              <div className="flex items-center gap-2">
+                {/* Language Switcher */}
+                <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('python')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'python'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>🐍</span>
+                    <span>Python</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('pseudocode')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'pseudocode'
+                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>📝</span>
+                    <span>Pseudo</span>
+                  </button>
+                </div>
+
+                <span className="text-xs font-mono text-sky-400">
+                  L.{current.lineId}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-1 font-mono text-xs sm:text-sm">
-              {CODE_LINES.map((line) => {
+              {activeCodeLines.map((line) => {
                 const isActive = current.lineId === line.id;
                 return (
                   <div

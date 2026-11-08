@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Trophy, ChevronRight, RotateCcw, Shuffle, Sparkles, Info, Code2, Eye } from 'lucide-react';
+import { CodeLanguage } from '../languageStore';
 
 interface ExtremaStep {
   lineId: number;
@@ -11,7 +12,15 @@ interface ExtremaStep {
   explanation: string;
 }
 
-export default function FindExtremaView() {
+interface FindExtremaViewProps {
+  language?: CodeLanguage;
+  onLanguageChange?: (lang: CodeLanguage) => void;
+}
+
+export default function FindExtremaView({
+  language = 'python',
+  onLanguageChange
+}: FindExtremaViewProps = {}) {
   const [array, setArray] = useState<number[]>([23, 78, 12, 95, 41]);
   const [mode, setMode] = useState<'MAX' | 'MIN'>('MAX');
   const [stepIndex, setStepIndex] = useState<number>(-1);
@@ -156,19 +165,50 @@ export default function FindExtremaView() {
       {/* Two Zones */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
-        {/* Zone 1: Pseudo-code (Left 5 cols) */}
+        {/* Zone 1: Code (Left 5 cols) */}
         <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-800">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <Code2 className="w-4 h-4 text-sky-400" />
-                <span>Zone 1 · Pseudo-code</span>
+                <span>Zone 1 · {language === 'python' ? 'Code Python' : 'Pseudo-code'}</span>
               </h2>
-              {current && (
-                <span className="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
-                  Ligne {current.lineId}
-                </span>
-              )}
+
+              <div className="flex items-center gap-2">
+                {/* Language Switcher */}
+                <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('python')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'python'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>🐍</span>
+                    <span>Python</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('pseudocode')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'pseudocode'
+                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>📝</span>
+                    <span>Pseudo</span>
+                  </button>
+                </div>
+
+                {current && (
+                  <span className="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
+                    L.{current.lineId}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-1.5 font-mono text-xs sm:text-sm">
@@ -183,28 +223,32 @@ export default function FindExtremaView() {
                 current?.lineId === 2 ? 'bg-sky-500/15 border-sky-400 text-white font-bold ring-1 ring-sky-500/30' : 'border-transparent text-slate-400'
               }`}>
                 <span className="text-slate-600 mr-2 text-[11px]">2 :</span>
-                <span>Pour i allant de 1 à N-1 :</span>
+                <span>{language === 'python' ? 'for i in range(1, len(tableau)):' : 'Pour i allant de 1 à N-1 :'}</span>
               </div>
 
               <div className={`p-2 pl-6 rounded-lg border-l-4 transition-all ${
                 current?.lineId === 3 ? 'bg-sky-500/15 border-sky-400 text-white font-bold ring-1 ring-sky-500/30' : 'border-transparent text-slate-400'
               }`}>
                 <span className="text-slate-600 mr-2 text-[11px]">3 :</span>
-                <span>Si tableau[i] {mode === 'MAX' ? '>' : '<'} champion :</span>
+                <span>
+                  {language === 'python'
+                    ? `if tableau[i] ${mode === 'MAX' ? '>' : '<'} champion:`
+                    : `Si tableau[i] ${mode === 'MAX' ? '>' : '<'} champion :`}
+                </span>
               </div>
 
               <div className={`p-2 pl-10 rounded-lg border-l-4 transition-all ${
                 current?.lineId === 4 ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 font-bold ring-1 ring-emerald-400/30' : 'border-transparent text-slate-400'
               }`}>
                 <span className="text-slate-600 mr-2 text-[11px]">4 :</span>
-                <span>champion = tableau[i]</span>
+                <span>{language === 'python' ? '    champion = tableau[i]' : 'champion = tableau[i]'}</span>
               </div>
 
               <div className={`p-2 rounded-lg border-l-4 transition-all ${
                 current?.lineId === 5 ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 font-bold ring-1 ring-emerald-400/30' : 'border-transparent text-slate-400'
               }`}>
                 <span className="text-slate-600 mr-2 text-[11px]">5 :</span>
-                <span>Fin, retourner champion</span>
+                <span>{language === 'python' ? 'return champion' : 'Fin, retourner champion'}</span>
               </div>
             </div>
           </div>

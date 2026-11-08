@@ -18,6 +18,8 @@ import {
   Download
 } from 'lucide-react';
 
+import { CodeLanguage } from '../languageStore';
+
 interface PseudoCodeLine {
   id: number;
   label: string;
@@ -31,6 +33,14 @@ const PSEUDO_CODE_LINES: PseudoCodeLine[] = [
   { id: 3, label: 'Ligne 3', code: "Alors retourner 'Trouvé'", indent: 2 },
   { id: 4, label: 'Ligne 4', code: 'Sinon continuer', indent: 2 },
   { id: 5, label: 'Ligne 5', code: "Fin de boucle, retourner 'Non trouvé'", indent: 0 },
+];
+
+const PYTHON_CODE_LINES: PseudoCodeLine[] = [
+  { id: 1, label: 'Ligne 1', code: 'for i in range(len(tableau)):', indent: 0 },
+  { id: 2, label: 'Ligne 2', code: '    if tableau[i] == cible:', indent: 1 },
+  { id: 3, label: 'Ligne 3', code: '        return i  # Trouvé !', indent: 2 },
+  { id: 4, label: 'Ligne 4', code: '    # continuer la recherche', indent: 1 },
+  { id: 5, label: 'Ligne 5', code: 'return -1  # Non trouvé', indent: 0 },
 ];
 
 interface StepState {
@@ -47,9 +57,15 @@ interface StepState {
 
 interface LinearSearchViewProps {
   soundEnabled: boolean;
+  language?: CodeLanguage;
+  onLanguageChange?: (lang: CodeLanguage) => void;
 }
 
-export default function LinearSearchView({ soundEnabled }: LinearSearchViewProps) {
+export default function LinearSearchView({ 
+  soundEnabled, 
+  language = 'python', 
+  onLanguageChange 
+}: LinearSearchViewProps) {
   // Array configuration (strictly 5 numbers as requested)
   const [array, setArray] = useState<number[]>([14, 42, 7, 89, 53]);
   const [target, setTarget] = useState<number>(89);
@@ -552,23 +568,55 @@ export default function LinearSearchView({ soundEnabled }: LinearSearchViewProps
         {/* ======================================================== */}
         <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col justify-between shadow-xl">
           <div>
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+            {/* Header with Language Switcher */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <Code2 className="w-4 h-4 text-sky-400" />
                 <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
-                  Zone 1 · Pseudo-code
+                  Zone 1 · {language === 'python' ? 'Code Python' : 'Pseudo-code'}
                 </h2>
               </div>
-              {currentStep && (
-                <span className="text-xs font-semibold font-code text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
-                  Ligne active : {currentStep.lineId}
-                </span>
-              )}
+
+              {/* Language Switcher */}
+              <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('python')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'python'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>🐍</span>
+                    <span>Python</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('pseudocode')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'pseudocode'
+                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>📝</span>
+                    <span>Pseudo</span>
+                  </button>
+                </div>
+
+                {currentStep && (
+                  <span className="text-[11px] font-semibold font-code text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
+                    L.{currentStep.lineId}
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Pseudo-code listing with independent highlighting */}
+            {/* Code listing with independent highlighting */}
             <div className="space-y-1.5 font-code">
-              {PSEUDO_CODE_LINES.map((line) => {
+              {(language === 'python' ? PYTHON_CODE_LINES : PSEUDO_CODE_LINES).map((line) => {
                 const isActive = currentStep?.lineId === line.id;
                 
                 let activeClasses = 'bg-sky-500/15 border-sky-400 text-white shadow-sm ring-1 ring-sky-500/20';

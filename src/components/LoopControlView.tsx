@@ -15,6 +15,8 @@ import {
   Trophy
 } from 'lucide-react';
 
+import { CodeLanguage } from '../languageStore';
+
 interface LoopStep {
   lineId: number;
   i: number;
@@ -24,7 +26,15 @@ interface LoopStep {
   isLoopBack?: boolean;
 }
 
-export default function LoopControlView() {
+interface LoopControlViewProps {
+  language?: CodeLanguage;
+  onLanguageChange?: (lang: CodeLanguage) => void;
+}
+
+export default function LoopControlView({
+  language = 'python',
+  onLanguageChange
+}: LoopControlViewProps = {}) {
   const [n, setN] = useState<number>(4);
   const [syntaxMode, setSyntaxMode] = useState<'while' | 'for'>('while');
   const [stepIndex, setStepIndex] = useState<number>(-1);
@@ -278,16 +288,47 @@ export default function LoopControlView() {
         {/* Zone 1: Pseudo-code & Instructions CPU (Left 6 cols) */}
         <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-800">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <Code2 className="w-4 h-4 text-sky-400" />
-                <span>Zone 1 · Instructions du Processeur</span>
+                <span>Zone 1 · {language === 'python' ? 'Code Python' : 'Pseudo-code'}</span>
               </h2>
-              {current && (
-                <span className="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
-                  Ligne {current.lineId}
-                </span>
-              )}
+
+              <div className="flex items-center gap-2">
+                {/* Language Switcher */}
+                <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('python')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'python'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>🐍</span>
+                    <span>Python</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('pseudocode')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'pseudocode'
+                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>📝</span>
+                    <span>Pseudo</span>
+                  </button>
+                </div>
+
+                {current && (
+                  <span className="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
+                    L.{current.lineId}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Code Lines Listing */}
@@ -297,7 +338,7 @@ export default function LoopControlView() {
                 current?.lineId === 1 ? 'bg-sky-500/15 border-sky-400 text-white font-bold ring-1 ring-sky-500/30' : 'border-transparent text-slate-400'
               }`}>
                 <span className="text-slate-600 text-[11px] w-4">1</span>
-                <span>let somme = 0;</span>
+                <span>{language === 'python' ? 'somme = 0' : 'let somme = 0;'}</span>
               </div>
 
               {/* Line 2 */}
@@ -305,7 +346,7 @@ export default function LoopControlView() {
                 current?.lineId === 2 ? 'bg-sky-500/15 border-sky-400 text-white font-bold ring-1 ring-sky-500/30' : 'border-transparent text-slate-400'
               }`}>
                 <span className="text-slate-600 text-[11px] w-4">2</span>
-                <span>let i = 1;</span>
+                <span>{language === 'python' ? 'i = 1' : 'let i = 1;'}</span>
               </div>
 
               {/* Line 3 (Loop condition) */}
@@ -319,9 +360,9 @@ export default function LoopControlView() {
                 <div className="flex items-center gap-3">
                   <span className="text-slate-600 text-[11px] w-4">3</span>
                   <span>
-                    {syntaxMode === 'while'
-                      ? `tant_que (i <= ${n}) faire :`
-                      : `pour (i = 1; i <= ${n}; i++) :`}
+                    {language === 'python'
+                      ? (syntaxMode === 'while' ? `while i <= ${n}:` : `for i in range(1, ${n + 1}):`)
+                      : (syntaxMode === 'while' ? `tant_que (i <= ${n}) faire :` : `pour (i = 1; i <= ${n}; i++) :`)}
                   </span>
                 </div>
                 {current?.lineId === 3 && (
@@ -338,7 +379,7 @@ export default function LoopControlView() {
                 current?.lineId === 4 ? 'bg-sky-500/15 border-sky-400 text-white font-bold ring-1 ring-sky-500/30' : 'border-transparent text-slate-400'
               }`}>
                 <span className="text-slate-600 text-[11px] w-4">4</span>
-                <span>somme = somme + i;</span>
+                <span>{language === 'python' ? 'somme += i' : 'somme = somme + i;'}</span>
               </div>
 
               {/* Line 5 (Increment & Jump) */}
@@ -347,7 +388,7 @@ export default function LoopControlView() {
               }`}>
                 <div className="flex items-center gap-3">
                   <span className="text-slate-600 text-[11px] w-4">5</span>
-                  <span>i = i + 1;</span>
+                  <span>{language === 'python' ? 'i += 1' : 'i = i + 1;'}</span>
                 </div>
                 {current?.lineId === 5 && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-400 text-slate-950 flex items-center gap-1 animate-pulse">

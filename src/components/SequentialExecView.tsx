@@ -11,6 +11,8 @@ import {
   XCircle
 } from 'lucide-react';
 
+import { CodeLanguage } from '../languageStore';
+
 interface CodeLine {
   id: number;
   code: string;
@@ -30,7 +32,28 @@ const PROGRAM_LINES: CodeLine[] = [
   { id: 10, code: '// Fin du programme', indent: 0 },
 ];
 
-export default function SequentialExecView() {
+const PYTHON_PROGRAM_LINES: CodeLine[] = [
+  { id: 1, code: 'temperature = 28', indent: 0 },
+  { id: 2, code: 'climatisation = False', indent: 0 },
+  { id: 3, code: 'statut = "En attente"', indent: 0 },
+  { id: 4, code: 'if temperature >= 25:', indent: 0 },
+  { id: 5, code: '    climatisation = True', indent: 1 },
+  { id: 6, code: '    statut = "Refroidissement actif"', indent: 1 },
+  { id: 7, code: 'else:', indent: 0 },
+  { id: 8, code: '    climatisation = False', indent: 1 },
+  { id: 9, code: '    statut = "Température idéale"', indent: 1 },
+  { id: 10, code: '# Fin du script', indent: 0 },
+];
+
+interface SequentialExecViewProps {
+  language?: CodeLanguage;
+  onLanguageChange?: (lang: CodeLanguage) => void;
+}
+
+export default function SequentialExecView({ 
+  language = 'python', 
+  onLanguageChange 
+}: SequentialExecViewProps = {}) {
   const [initialTemp, setInitialTemp] = useState<number>(28);
   const [step, setStep] = useState<number>(0);
 
@@ -114,20 +137,51 @@ export default function SequentialExecView() {
         {/* Zone 1: Code Program (Left 6 cols) */}
         <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-800">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <Code2 className="w-4 h-4 text-sky-400" />
-                <span>Instructions du Processeur (CPU)</span>
+                <span>Zone 1 · {language === 'python' ? 'Code Python' : 'Pseudo-code'}</span>
               </h2>
-              {currentLineId && (
-                <span className="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
-                  Ligne active : {currentLineId}
-                </span>
-              )}
+
+              <div className="flex items-center gap-2">
+                {/* Language Switcher */}
+                <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('python')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'python'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>🐍</span>
+                    <span>Python</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange && onLanguageChange('pseudocode')}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                      language === 'pseudocode'
+                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>📝</span>
+                    <span>Pseudo</span>
+                  </button>
+                </div>
+
+                {currentLineId && (
+                  <span className="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
+                    L.{currentLineId}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-1 font-mono text-xs sm:text-sm">
-              {PROGRAM_LINES.map((line) => {
+              {(language === 'python' ? PYTHON_PROGRAM_LINES : PROGRAM_LINES).map((line) => {
                 const isActive = currentLineId === line.id;
                 const isSkipped =
                   (conditionMet && [7, 8, 9].includes(line.id)) ||

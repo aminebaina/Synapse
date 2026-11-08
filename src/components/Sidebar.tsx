@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { 
   Search, 
   GitFork, 
@@ -19,7 +19,12 @@ import {
   CircleDot,
   Workflow,
   Trophy,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2,
+  Award,
+  Download,
+  Upload,
+  Check
 } from 'lucide-react';
 import { CONCEPTS, ConceptId, ConceptCategory } from '../types';
 import { getProgression } from '../navigationPath';
@@ -29,15 +34,33 @@ interface SidebarProps {
   onSelectConcept: (id: ConceptId) => void;
   isOpen: boolean;
   onCloseMobile: () => void;
+  completedConcepts: ConceptId[];
+  level1CompletedCount: number;
+  totalLevel1: number;
+  isLevel1Complete: boolean;
+  onOpenCertificate: () => void;
+  onExportJSON: () => void;
+  onImportJSON: (json: string) => boolean;
 }
 
 export default function Sidebar({
   activeConceptId,
   onSelectConcept,
   isOpen,
-  onCloseMobile
+  onCloseMobile,
+  completedConcepts,
+  level1CompletedCount,
+  totalLevel1,
+  isLevel1Complete,
+  onOpenCertificate,
+  onExportJSON,
+  onImportJSON
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDataModal, setShowDataModal] = useState(false);
+  const [importInput, setImportInput] = useState('');
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Next concept progression
   const progression = getProgression(activeConceptId);
@@ -68,8 +91,6 @@ export default function Sidebar({
         return <Link className={className} />;
       case 'Users':
         return <Users className={className} />;
-      case 'Search':
-        return <Search className={className} />;
       case 'Layers3':
         return <Layers3 className={className} />;
       case 'GitFork':
@@ -83,7 +104,7 @@ export default function Sidebar({
     }
   };
 
-  // Filter concepts based on search query
+  // Filter concepts based on search
   const filteredConcepts = useMemo(() => {
     if (!searchQuery.trim()) return CONCEPTS;
     const query = searchQuery.toLowerCase();
@@ -91,8 +112,7 @@ export default function Sidebar({
       (c) =>
         c.title.toLowerCase().includes(query) ||
         c.description.toLowerCase().includes(query) ||
-        c.tagline.toLowerCase().includes(query) ||
-        c.categoryName.toLowerCase().includes(query)
+        c.tagline.toLowerCase().includes(query)
     );
   }, [searchQuery]);
 
@@ -103,6 +123,31 @@ export default function Sidebar({
     { key: 'linear-structures', label: '3. Structures Linéaires & Algorithmes' },
     { key: 'algorithms-more', label: '4. Pour aller plus loin (Niveau 2)' },
   ];
+
+  const level1ProgressPercent = Math.round((level1CompletedCount / totalLevel1) * 100);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        const success = onImportJSON(content);
+        if (success) {
+          setImportStatus('Progression importée avec succès !');
+          setTimeout(() => {
+            setShowDataModal(false);
+            setImportStatus(null);
+          }, 1500);
+        } else {
+          setImportStatus('Format de fichier invalide.');
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <>
@@ -121,7 +166,7 @@ export default function Sidebar({
         }`}
       >
         {/* Brand Header */}
-        <div className="h-16 px-5 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="h-16 px-4 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400">
               <Sparkles className="w-4 h-4" />
@@ -130,8 +175,8 @@ export default function Sidebar({
               <span className="font-bold text-base text-white tracking-tight block leading-tight">
                 AlgoAcadémie
               </span>
-              <span className="text-[11px] text-slate-400 block">
-                Visualiseur d'Algorithmes
+              <span className="text-[11px] text-slate-400 block font-mono">
+                Local-First · Zero-Cost
               </span>
             </div>
           </div>
@@ -205,6 +250,19 @@ export default function Sidebar({
           </div>
         )}
 
+        {/* Certificate Quick Banner if completed */}
+        {isLevel1Complete && (
+          <div className="px-3 py-2 border-b border-amber-500/30 bg-amber-500/10 shrink-0">
+            <button
+              onClick={onOpenCertificate}
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 transition cursor-pointer"
+            >
+              <Award className="w-4 h-4 text-slate-950" />
+              <span>🎓 Mon Certificat Niveau 1</span>
+            </button>
+          </div>
+        )}
+
         {/* Navigation Notion List */}
         <div className="flex-1 overflow-y-auto p-3 space-y-6">
           {filteredConcepts.length === 0 ? (
@@ -218,25 +276,31 @@ export default function Sidebar({
 
               return (
                 <div key={cat.key}>
-                  {/* Category Title Header */}
-                  <div className="px-2 mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 select-none">
-                    {cat.label}
+                  <div className="px-2 mb-2 flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <span>{cat.label}</span>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {conceptsInCat.filter((c) => completedConcepts.includes(c.id)).length}/{conceptsInCat.length}
+                    </span>
                   </div>
 
-                  {/* Concepts inside category */}
                   <div className="space-y-1">
                     {conceptsInCat.map((concept) => {
-                      const isActive = concept.id === activeConceptId;
+                      const isActive = activeConceptId === concept.id;
+                      const isCompleted = completedConcepts.includes(concept.id);
+
                       return (
                         <button
                           key={concept.id}
                           onClick={() => {
                             onSelectConcept(concept.id);
                             onCloseMobile();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
-                          className={`w-full text-left p-2.5 rounded-xl transition-all duration-200 flex items-start gap-3 group relative cursor-pointer border ${
+                          className={`w-full text-left p-2.5 rounded-xl transition-all flex items-start gap-2.5 relative group cursor-pointer border ${
                             isActive
                               ? 'bg-sky-500/10 border-sky-500/30 text-white shadow-sm'
+                              : isCompleted
+                              ? 'bg-slate-950/40 border-slate-800/80 text-slate-300 hover:border-slate-700'
                               : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                           }`}
                         >
@@ -245,15 +309,22 @@ export default function Sidebar({
                             <div className="absolute left-0 top-2 bottom-2 w-1 bg-sky-400 rounded-r-full" />
                           )}
 
-                          {/* Icon */}
+                          {/* Icon or Green Check if completed */}
                           <div
-                            className={`p-1.5 rounded-lg shrink-0 mt-0.5 transition-colors ${
+                            className={`p-1.5 rounded-lg shrink-0 mt-0.5 transition-colors relative ${
                               isActive
                                 ? 'bg-sky-500/20 text-sky-400'
+                                : isCompleted
+                                ? 'bg-emerald-500/10 text-emerald-400'
                                 : 'bg-slate-800 text-slate-400 group-hover:text-slate-200 group-hover:bg-slate-700/60'
                             }`}
                           >
                             {renderIcon(concept.iconName, 'w-4 h-4')}
+                            {isCompleted && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center">
+                                <Check className="w-2 h-2 text-slate-950 stroke-[3]" />
+                              </div>
+                            )}
                           </div>
 
                           {/* Content */}
@@ -261,13 +332,17 @@ export default function Sidebar({
                             <div className="flex items-center justify-between gap-1">
                               <span
                                 className={`text-xs font-semibold truncate ${
-                                  isActive ? 'text-white' : 'text-slate-300'
+                                  isActive ? 'text-white' : isCompleted ? 'text-slate-200' : 'text-slate-300'
                                 }`}
                               >
                                 {concept.title}
                               </span>
                               {concept.badge && (
-                                <span className="text-[10px] font-medium text-sky-400 font-mono shrink-0">
+                                <span className={`text-[10px] font-medium font-mono shrink-0 ${
+                                  concept.badge.includes('Départ') || concept.badge.includes('ici') 
+                                    ? 'text-emerald-400 font-bold' 
+                                    : 'text-sky-400'
+                                }`}>
                                   {concept.badge}
                                 </span>
                               )}
@@ -287,14 +362,101 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Sidebar Footer */}
-        <div className="p-3.5 border-t border-slate-800/80 bg-slate-900/60 shrink-0">
-          <div className="flex items-center justify-between text-[11px] text-slate-400">
-            <span>{CONCEPTS.length} notions interactives</span>
-            <span className="text-emerald-400 font-mono font-semibold">Niveau 1 Complet</span>
+        {/* Sidebar Footer with Local-First Progress & Data Portability */}
+        <div className="p-3 border-t border-slate-800 bg-slate-950/80 shrink-0 space-y-2">
+          
+          {/* Progress bar */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Progression Niveau 1 :</span>
+              <span className="font-mono font-bold text-emerald-400">{level1CompletedCount}/{totalLevel1} ({level1ProgressPercent}%)</span>
+            </div>
+            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-emerald-400 transition-all duration-300 rounded-full"
+                style={{ width: `${level1ProgressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Backup / Export actions */}
+          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-900">
+            <button
+              onClick={() => setShowDataModal(true)}
+              className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition"
+              title="Sauvegarder ou restaurer mes données sans serveur"
+            >
+              <Download className="w-3 h-3 text-sky-400" />
+              <span>Sauvegarde Local-First</span>
+            </button>
+
+            <button
+              onClick={onOpenCertificate}
+              className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 cursor-pointer transition"
+            >
+              <Award className="w-3 h-3" />
+              <span>Certificat</span>
+            </button>
           </div>
         </div>
       </aside>
+
+      {/* Data Backup Modal (Local-First JSON export/import) */}
+      {showDataModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Download className="w-4 h-4 text-sky-400" />
+                <h3 className="font-bold text-sm text-white">Sauvegarde & Restauration Local-First</h3>
+              </div>
+              <button 
+                onClick={() => setShowDataModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-3 leading-relaxed">
+              Vos progrès sont stockés <strong>exclusivement dans votre navigateur</strong> (zéro coût serveur, respect absolu de votre vie privée). Emportez votre fichier JSON pour reprendre vos exercices sur un autre appareil.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              <button
+                onClick={onExportJSON}
+                className="w-full py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                Exporter ma progression (algo_progression.json)
+              </button>
+
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".json"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 border border-slate-700 transition cursor-pointer"
+                >
+                  <Upload className="w-4 h-4" />
+                  Importer un fichier JSON de progression
+                </button>
+              </div>
+
+              {importStatus && (
+                <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs text-center font-medium">
+                  {importStatus}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
